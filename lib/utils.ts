@@ -30,3 +30,64 @@ export function convertToVietnamTime(minutes: number, mode: "single" | "string",
         return {hours, minutes};
     }
 }
+
+interface GroupedData {
+    [key: string]: IPermissions[];
+}
+
+interface ResponseItem {
+    [key: string]: IPermissions[];
+}
+
+interface IPermissions {
+    name: string,
+    status: boolean,
+    pername: string,
+    _id:string,
+    id:string
+}
+export function groupByPermissions(data: any[]): ResponseItem[] {
+    const response: ResponseItem[] = [];
+    const groupedData: GroupedData = {};
+    if (!data) return [];
+
+    data.forEach((item) => {
+        const permissionName = item.name.split('.')[1];
+        const perName = item.name.split('.')[2];
+        if (!groupedData[permissionName]) {// @ts-ignore
+            groupedData[permissionName] = new Set<string>();
+        }// @ts-ignore
+        groupedData[permissionName].add(perName);
+    });
+
+    const allPerNames = new Set<string>();
+    for (const permissionName in groupedData) {
+        for (const perName of groupedData[permissionName]) {
+            // @ts-ignore
+            allPerNames.add(perName);
+        }
+    }
+
+    const sortedPerNames = Array.from(allPerNames);
+
+    for (const permissionName in groupedData) {
+        const permissionArray: (string | null)[] = [];
+        for (const perName of sortedPerNames) {// @ts-ignore
+            permissionArray.push(groupedData[permissionName].has(perName) ? perName : null);
+        }
+        const permissionItemArray = permissionArray.map((perName) => {
+            const foundItem = data.find((item) => item.name.split('.')[1] === permissionName && item.name.split('.')[2] === perName);
+            const newItem = {...foundItem, indentity:permissionName}
+            return foundItem ? newItem : null;
+        });// @ts-ignore
+        // @ts-ignore
+        const permissionObject: ResponseItem = {
+            // @ts-ignore
+            [permissionName]: permissionItemArray ,
+
+        };
+        response.push(permissionObject);
+    }
+
+    return response;
+}

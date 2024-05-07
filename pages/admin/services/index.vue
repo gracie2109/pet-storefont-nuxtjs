@@ -7,85 +7,90 @@
       </PageHeader>
       <h3>HSHHSH</h3>
     </PageHeaderShell>
-    <div class="w-full">
-      <div class="flex gap-2 items-center py-4">
 
-        <Input
-            class="max-w-sm"
-            placeholder="Filter service name..."
-            :model-value="table.getColumn('name')?.getFilterValue() as string"
-            @update:model-value=" table.getColumn('name')?.setFilterValue($event)"
-        />
+    <div v-if="fetchStatus === 'error' || !data">Something went wrong</div>
+    <div v-else-if="fetchStatus === 'success' && data">
+      <div class="w-full">
+        <div class="flex gap-2 items-center py-4">
 
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button variant="outline" class="ml-auto">
-              Columns
-              <ChevronDown class="ml-2 h-4 w-4"/>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuCheckboxItem
-                v-for="column in table.getAllColumns().filter((column) => column.getCanHide())"
-                :key="column.id"
-                class="capitalize"
-                :checked="column.getIsVisible()"
-                @update:checked="(value) => {
+          <Input
+              class="max-w-sm"
+              placeholder="Filter service name..."
+              :model-value="table.getColumn('name')?.getFilterValue() as string"
+              @update:model-value=" table.getColumn('name')?.setFilterValue($event)"
+          />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button variant="outline" class="ml-auto">
+                Columns
+                <ChevronDown class="ml-2 h-4 w-4"/>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuCheckboxItem
+                  v-for="column in table.getAllColumns().filter((column) => column.getCanHide())"
+                  :key="column.id"
+                  class="capitalize"
+                  :checked="column.getIsVisible()"
+                  @update:checked="(value) => {
               column.toggleVisibility(!!value)
             }"
-            >
-              {{ column.id }}
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <p>{{ url.pathname }}</p>
-<!--        <NuxtLink href="" to="newurl">Create Service</NuxtLink>-->
-      </div>
-      <div class="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-              <TableHead
-                  v-for="header in headerGroup.headers" :key="header.id" :data-pinned="header.column.getIsPinned()"
-                  :class="cn(
+              >
+                {{ column.id }}
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <NuxtLink :to="$route.path + '/create'">Create</NuxtLink>
+
+        </div>
+        <div class="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
+                <TableHead
+                    v-for="header in headerGroup.headers" :key="header.id" :data-pinned="header.column.getIsPinned()"
+                    :class="cn(
                 { 'sticky bg-background/95': header.column.getIsPinned() },
                 header.column.getIsPinned() === 'left' ? 'left-0' : 'right-0',
               )"
-              >
-                <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header"
-                            :props="header.getContext()"/>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <template v-if="table.getRowModel().rows?.length">
-              <TableRow
-                  v-for="row in table.getRowModel().rows"
-                  :key="row.id"
-                  :data-state="row.getIsSelected() && 'selected'"
-              >
-                <TableCell
-                    v-for="cell in row.getVisibleCells()" :key="cell.id" :data-pinned="cell.column.getIsPinned()"
-                    :class="cn(
+                >
+                  <FlexRender v-if="!header.isPlaceholder" :render="header.column.columnDef.header"
+                              :props="header.getContext()"/>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <template v-if="table.getRowModel().rows?.length">
+                <TableRow
+                    v-for="row in table.getRowModel().rows"
+                    :key="row.id"
+                    :data-state="row.getIsSelected() && 'selected'"
+                >
+                  <TableCell
+                      v-for="cell in row.getVisibleCells()" :key="cell.id" :data-pinned="cell.column.getIsPinned()"
+                      :class="cn(
                   { 'sticky bg-background/95': cell.column.getIsPinned() },
                   cell.column.getIsPinned() === 'left' ? 'left-0' : 'right-0',
                 )"
+                  >
+                    <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()"/>
+                  </TableCell>
+                </TableRow>
+              </template>
+
+              <TableRow v-else>
+                <TableCell
+                    :colspan="columns.length"
+                    class="h-24 text-center"
                 >
-                  <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()"/>
+                  No results.
                 </TableCell>
               </TableRow>
-            </template>
+            </TableBody>
+          </Table>
+        </div>
 
-            <TableRow v-else>
-              <TableCell
-                  :colspan="columns.length"
-                  class="h-24 text-center"
-              >
-                No results.
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
       </div>
 
       <div class="flex items-center justify-end space-x-2 py-4">
@@ -113,6 +118,8 @@
         </div>
       </div>
     </div>
+    <div v-else>   Loading...  </div>
+
   </Shell>
 </template>
 
@@ -122,9 +129,11 @@
 import {Shell} from '@/components/shell'
 import {PageHeaderShell, PageHeaderHeading, PageHeader} from "@/components/page-header";
 
-const {data: service, pending, error} = await useFetch('http://localhost:5007/api/services/get-all')
+const {data: service, pending, error, status} = await useFetch('http://localhost:5007/api/services/get-all')
+const fetchStatus = toRaw(status.value) as string;
 const response = toRaw(service.value) as any
-
+console.log(":fetchStatus", fetchStatus, typeof fetchStatus);
+console.log(":::response", response)
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -160,14 +169,13 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {cn, convertToVietnamTime, valueUpdater} from '@/lib/utils'
-import {useNuxt} from "@nuxt/kit";
+
 
 export interface Payment {
 
 }
 
 const data: Payment[] = response['data'] as any[]
-
 const columns: ColumnDef<Payment>[] = [
   {
     id: 'select',
@@ -260,8 +268,6 @@ const table = useVueTable({
     },
   },
 })
-
-const url = useRequestURL();
 
 
 </script>

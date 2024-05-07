@@ -1,12 +1,12 @@
 <template>
-  <Primitive
+  <div
       v-bind="delegatedProps"
       :class="cn('grid gap-1', props.class)"
   >
 
     <slot/>
     <Separator class="absolute top-20" v-show="props.separated"/>
-  </Primitive>
+  </div>
 </template>
 
 <script lang="ts" setup>

@@ -25,12 +25,12 @@ const delegatedProps = computed(() => {
 
 <template>
   <div class="w-full relative">
-    <Primitive
+    <div
         v-bind="delegatedProps"
         :class="cn(pageHeaderShellVariants({ variant }), headerShellProps.class,'flex justify-between items-center relative')"
     >
       <slot/>
       <Separator class="absolute top-20" v-show="headerShellProps.separated"/>
-    </Primitive>
+    </div>
   </div>
 </template>

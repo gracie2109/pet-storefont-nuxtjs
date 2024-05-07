@@ -13,8 +13,10 @@ interface HeadingVariantsProps extends PrimitiveProps{
 
 
 
-const props = withDefaults(defineProps<HeadingVariantsProps>(),{})
-
+const props = withDefaults(defineProps<HeadingVariantsProps>(),{
+  as: "h1"
+})
+const Comp = props['as']
 
 const delegatedProps = computed(() => {
   const {class: _, ...delegated} = props
@@ -25,10 +27,10 @@ const delegatedProps = computed(() => {
 
 
 <template>
-  <Primitive
+  <Comp
       v-bind="delegatedProps"
       :class="cn(headingVariants({ size}), props.class)"
   >
     <slot/>
-  </Primitive>
+  </Comp>
 </template>
